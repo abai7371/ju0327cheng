@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>資產配置與貸款投資試算工具</title>
+<style>
+  :root{
+    --bg:#EEF1F6;
+    --surface:#FFFFFF;
+    --surface-alt:#F5F7FB;
+    --ink:#16233A;
+    --ink-muted:#5B6B82;
+    --primary:#0F3D5C;
+    --primary-dark:#0A2C43;
+    --gold:#B8872B;
+    --teal:#1E7F72;
+    --indigo:#4A4FB0;
+    --border:#DCE3EC;
+    --off:#9AA6B8;
+    --danger:#B0453D;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Inter","PingFang TC","Microsoft JhengHei",sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+  }
+  .app{max-width:1180px;margin:0 auto;padding:0 20px 60px;}
+  header.top{
+    background:linear-gradient(135deg,var(--primary-dark),var(--primary));
+    color:#fff;
+    padding:28px 20px 0;
+    margin:0 -20px 24px;
+  }
+  header.top h1{
+    font-family:"Manrope","Inter",sans-serif;
+    font-size:22px;
+    font-weight:800;
+    letter-spacing:.3px;
+    max-width:1180px;
+    margin:0 auto 4px;
+    padding:0 20px;
+  }
+  header.top p{
+    max-width:1180px;
+    margin:0 auto 18px;
+    padding:0 20px;
+    color:#C9D6E3;
+    font-size:13px;
+  }
+  .tabs{
+    max-width:1180px;margin:0 auto;padding:0 20px;
+    display:flex;gap:4px;
+  }
+  .tab-btn{
+    border:none;
+    background:transparent;
+    color:#B9C7D6;
+    padding:12px 22px;
+    font-size:15px;
+    font-weight:700;
+    font-family:"Manrope","Inter",sans-serif;
+    cursor:pointer;
+    border-radius:10px 10px 0 0;
+    position:relative;
+    top:1px;
+  }
+  .tab-btn.active{
+    background:var(--bg);
+    color:var(--primary);
+  }
+  .page{display:none;}
+  .page.active{display:block;}
+
+  .section-title{
+    font-family:"Manrope","Inter",sans-serif;
+    font-size:16px;
+    font-weight:800;
+    color:var(--primary);
+    margin:28px 0 12px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .section-title .tag{
+    font-size:11px;
+    font-weight:700;
+    background:var(--primary);
+    color:#fff;
+    padding:2px 8px;
+    border-radius:20px;
+  }
+
+  .grid-loans{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+  }
+  @media(max-width:800px){ .grid-loans{grid-template-columns:1fr;} }
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:18px 20px;
+  }
+  .loan-card h3{
+    margin:0 0 12px;
+    font-size:15px;
+    font-weight:800;
+    color:var(--ink);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .field-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px 12px;
+    margin-bottom:10px;
+  }
+  .field{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+  .field label{
+    font-size:11.5px;
+    color:var(--ink-muted);
+    font-weight:600;
+  }
+  .field input{
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:7px 9px;
+    font-size:13.5px;
+    font-family:"IBM Plex Mono","Courier New",monospace;
+    color:var(--ink);
+    background:var(--surface-alt);
+  }
+  .field input:focus{outline:2px solid var(--primary);outline-offset:1px;}
+  .field select{
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:7px 9px;
+    font-size:12.5px;
+    font-family:"Inter","PingFang TC","Microsoft JhengHei",sans-serif;
+    color:var(--ink);
+    background:var(--surface-alt);
+  }
+  .field select:focus{outline:2px solid var(--primary);outline-offset:1px;}
+
+  .payment-box{
+    background:var(--surface-alt);
+    border:1px dashed var(--border);
+    border-radius:8px;
+    padding:8px 10px;
+    font-size:12.5px;
+    font-family:"IBM Plex Mono",monospace;
+    color:var(--primary-dark);
+    line-height:1.6;
+    margin-bottom:10px;
+  }
+  .loan-card{transition:background .2s,border-color .2s,box-shadow .2s;}
+  .loan-card.invested{
+    background:#FBF6EC;
+    border-color:var(--gold);
+    box-shadow:0 0 0 1px var(--gold) inset;
+  }
+  .invest-switch{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-top:2px;
+    padding:10px 12px;
+    border-radius:10px;
+    background:var(--surface-alt);
+    cursor:pointer;
+    user-select:none;
+  }
+  .invest-switch input{position:absolute;opacity:0;width:0;height:0;}
+  .switch-track{
+    position:relative;
+    flex-shrink:0;
+    width:42px;
+    height:24px;
+    border-radius:20px;
+    background:var(--off);
+    transition:background .2s;
+  }
+  .switch-knob{
+    position:absolute;
+    top:3px; left:3px;
+    width:18px;height:18px;
+    border-radius:50%;
+    background:#fff;
+    box-shadow:0 1px 3px rgba(0,0,0,.25);
+    transition:left .2s;
+  }
+  .invest-switch.active .switch-track{background:var(--gold);}
+  .invest-switch.active .switch-track .switch-knob{left:21px;}
+  .switch-text{font-size:12.5px;font-weight:700;color:var(--ink-muted);}
+  .switch-text b{color:var(--ink-muted);font-weight:700;}
+  .invest-switch.active .switch-text b{color:var(--gold);}
+  .switch-hint{font-size:11px;color:var(--ink-muted);font-weight:500;margin-left:auto;}
+
+  .alloc-wrap{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:20px;
+  }
+  .pool-line{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:14px;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .pool-line .label{font-size:13px;color:var(--ink-muted);font-weight:600;}
+  .pool-line .value{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:22px;
+    font-weight:700;
+    color:var(--primary);
+  }
+  .alloc-bar{
+    display:flex;
+    height:14px;
+    border-radius:8px;
+    overflow:hidden;
+    margin-bottom:18px;
+    background:var(--border);
+  }
+  .alloc-bar div{transition:width .2s;}
+  .bar-cf{background:var(--teal);}
+  .bar-comp{background:var(--indigo);}
+
+  .alloc-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+  }
+  @media(max-width:800px){ .alloc-grid{grid-template-columns:1fr;} }
+  .alloc-card{
+    border-radius:10px;
+    padding:14px 16px;
+    background:var(--surface-alt);
+    border-left:5px solid var(--teal);
+  }
+  .alloc-card.comp{border-left-color:var(--indigo);}
+  .alloc-card h4{
+    margin:0 0 10px;
+    font-size:14px;
+    font-weight:800;
+  }
+  .alloc-card.cash h4{color:var(--teal);}
+  .alloc-card.comp h4{color:var(--indigo);}
+  .alloc-card .field-row{grid-template-columns:1fr 1fr;}
+  .alloc-card .amount-line{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:16px;
+    font-weight:700;
+    margin-top:6px;
+    color:var(--ink);
+  }
+
+  .misc-row{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:14px;
+    margin:16px 0 4px;
+  }
+  @media(max-width:800px){ .misc-row{grid-template-columns:1fr;} }
+
+  table.calc-table{
+    width:100%;
+    border-collapse:collapse;
+    background:var(--surface);
+    border-radius:12px;
+    overflow:hidden;
+    font-family:"IBM Plex Mono",monospace;
+    font-size:12.5px;
+  }
+  table.calc-table thead th{
+    background:var(--primary);
+    color:#fff;
+    font-family:"Inter",sans-serif;
+    font-weight:700;
+    font-size:12px;
+    padding:10px 8px;
+    text-align:right;
+    white-space:nowrap;
+  }
+  table.calc-table thead th:first-child{text-align:center;}
+  table.calc-table tbody td{
+    padding:7px 8px;
+    text-align:right;
+    border-bottom:1px solid var(--border);
+    white-space:nowrap;
+  }
+  table.calc-table tbody td:first-child{
+    text-align:center;
+    font-family:"Inter",sans-serif;
+    font-weight:700;
+    color:var(--primary);
+  }
+  table.calc-table tbody tr:nth-child(even){background:var(--surface-alt);}
+  .neg{color:var(--danger);}
+  .table-scroll{overflow-x:auto;border:1px solid var(--border);border-radius:12px;}
+  .table-scroll table{border-radius:0;}
+  .note{font-size:11.5px;color:var(--ink-muted);margin:8px 2px 0;}
+
+  .compare-wrap{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:20px;
+  }
+  .compare-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+    margin-top:16px;
+  }
+  @media(max-width:800px){ .compare-grid{grid-template-columns:1fr;} }
+  .compare-card{
+    border-radius:10px;
+    padding:14px 16px;
+    background:var(--surface-alt);
+    border:1px solid var(--border);
+  }
+  .compare-card h4{margin:0 0 10px;font-size:14px;font-weight:800;color:var(--ink);}
+  .compare-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    padding:6px 0;
+    font-size:13px;
+    color:var(--ink-muted);
+    font-weight:600;
+    border-bottom:1px dashed var(--border);
+  }
+  .compare-row span:last-child{
+    font-family:"IBM Plex Mono",monospace;
+    font-weight:700;
+    color:var(--ink);
+  }
+  .compare-row.delta{border-bottom:none;}
+  .compare-row.delta span:last-child{color:var(--primary);}
+  .verdict{
+    margin-top:18px;
+    padding:14px 16px;
+    border-radius:10px;
+    font-size:13.5px;
+    font-weight:700;
+    line-height:1.6;
+    color:#fff;
+  }
+  .verdict.good{background:var(--teal);}
+  .verdict.warn{background:var(--gold);}
+  .verdict.bad{background:var(--danger);}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>資產配置與貸款投資試算工具</h1>
+  <p>初階版：四大貸款槓桿配置 ｜ 進階版：整體資產負債長期試算</p>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showPage(1,this)">初階版</button>
+    <button class="tab-btn" onclick="showPage(2,this)">進階版</button>
+  </div>
+</header>
+
+<div class="app">
+
+<!-- ===================== PAGE 1 ===================== -->
+<section id="page1" class="page active">
+
+  <div class="section-title"><span class="tag">STEP 1</span>自有資金</div>
+  <div class="grid-loans">
+    <div class="card loan-card">
+      <h3>自有資金</h3>
+      <div class="field-row">
+        <div class="field"><label>金額(元)</label><input type="number" id="amount_selfFund" value="500000" oninput="calcAll()"></div>
+      </div>
+      <label class="invest-switch" id="investRow_selfFund">
+        <input type="checkbox" onchange="toggleInvest(this,'selfFund')">
+        <span class="switch-track"><span class="switch-knob"></span></span>
+        <span class="switch-text">此筆資金<b>不</b>投入市場</span>
+      </label>
+    </div>
+  </div>
+
+  <div class="section-title"><span class="tag">STEP 2</span>貸款額度與月付金</div>
+  <div class="grid-loans">
+
+    <!-- 購屋貸款 -->
+    <div class="card loan-card">
+      <h3>購屋貸款</h3>
+      <div class="field-row">
+        <div class="field"><label>額度(元)</label><input type="number" id="amount_mortgage" value="5000000" oninput="calcAll()"></div>
+        <div class="field"><label>年期(年)</label><input type="number" id="years_mortgage" value="30" oninput="calcAll()"></div>
+        <div class="field"><label>利率(%)</label><input type="number" step="0.01" id="rate_mortgage" value="2.1" oninput="calcAll()"></div>
+        <div class="field"><label>寬限期(年)</label><input type="number" id="grace_mortgage" value="3" oninput="calcAll()"></div>
+      </div>
+      <div class="payment-box" id="payment_mortgage">請輸入額度與年期</div>
+      <label class="invest-switch" id="investRow_mortgage">
+        <input type="checkbox" onchange="toggleInvest(this,'mortgage')">
+        <span class="switch-track"><span class="switch-knob"></span></span>
+        <span class="switch-text">此筆貸款<b>不</b>投入市場</span>
+      </label>
+    </div>
+
+    <!-- 信用貸款 -->
+    <div class="card loan-card">
+      <h3>信用貸款</h3>
+      <div class="field-row">
+        <div class="field"><label>額度(元)</label><input type="number" id="amount_credit" value="1000000" oninput="calcAll()"></div>
+        <div class="field"><label>年期(年)</label><input type="number" id="years_credit" value="7" oninput="calcAll()"></div>
+        <div class="field"><label>利率(%)</label><input type="number" step="0.01" id="rate_credit" value="6" oninput="calcAll()"></div>
+      </div>
+      <div class="payment-box" id="payment_credit">請輸入額度與年期</div>
+      <label class="invest-switch" id="investRow_credit">
+        <input type="checkbox" onchange="toggleInvest(this,'credit')">
+        <span class="switch-track"><span class="switch-knob"></span></span>
+        <span class="switch-text">此筆貸款<b>不</b>投入市場</span>
+      </label>
+    </div>
+
+    <!-- 理財型房貸 -->
+    <div class="card loan-card">
+      <h3>理財型房貸</h3>
+      <div class="field-row">
+        <div class="field"><label>額度(元)</label><input type="number" id="amount_wm" value="3000000" oninput="calcAll()"></div>
+        <div class="field"><label>年期(年)</label><input type="number" id="years_wm" value="20" oninput="calcAll()"></div>
+        <div class="field"><label>利率(%)</label><input type="number" step="0.01" id="rate_wm" value="2.5" oninput="calcAll()"></div>
+        <div class="field"><label>寬限期(年)</label><input type="number" id="grace_wm" value="3" oninput="calcAll()"></div>
+      </div>
+      <div class="payment-box" id="payment_wm">請輸入額度與年期</div>
+      <label class="invest-switch" id="investRow_wm">
+        <input type="checkbox" onchange="toggleInvest(this,'wm')">
+        <span class="switch-track"><span class="switch-knob"></span></span>
+        <span class="switch-text">此筆貸款<b>不</b>投入市場</span>
+      </label>
+    </div>
+
+    <!-- 保單貸款 -->
+    <div class="card loan-card">
+      <h3>保單貸款</h3>
+      <div class="field-row">
+        <div class="field"><label>額度(元)</label><input type="number" id="amount_policy" value="1000000" oninput="calcAll()"></div>
+        <div class="field"><label>年期(年)</label><input type="number" id="years_policy" value="10" oninput="calcAll()"></div>
+        <div class="field"><label>利率(%)</label><input type="number" step="0.01" id="rate_policy" value="6" oninput="calcAll()"></div>
+        <div class="field"><label>寬限期(年)</label><input type="number" id="grace_policy" value="0" oninput="calcAll()"></div>
+      </div>
+      <div class="payment-box" id="payment_policy">請輸入額度與年期</div>
+      <label class="invest-switch" id="investRow_policy">
+        <input type="checkbox" onchange="toggleInvest(this,'policy')">
+        <span class="switch-track"><span class="switch-knob"></span></span>
+        <span class="switch-text">此筆貸款<b>不</b>投入市場</span>
+      </label>
+    </div>
+
+  </div>
+
+  <div class="section-title"><span class="tag">STEP 3</span>投入市場資金配置</div>
+  <div class="alloc-wrap">
+    <div class="pool-line">
+      <span class="label">已勾選投入市場之貸款總額</span>
+      <span class="value" id="investPoolDisplay">NT$ 0</span>
+    </div>
+    <div class="alloc-bar"><div class="bar-cf" id="barCf" style="width:50%"></div><div class="bar-comp" id="barComp" style="width:50%"></div></div>
+
+    <div class="alloc-grid">
+      <div class="alloc-card cash">
+        <h4>現金流資產</h4>
+        <div class="field-row">
+          <div class="field"><label>配置比例(%)</label><input type="number" id="cfRatio" value="50" min="0" max="100" oninput="calcAll()"></div>
+          <div class="field"><label>年化配息率(%)</label><input type="number" step="0.01" id="cfRate" value="4" oninput="calcAll()"></div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>配息是否投入定期定額</label>
+            <select id="dividendMode" onchange="calcAll()">
+              <option value="off">維持原用途（配息抵繳貸款，缺口自付）</option>
+              <option value="full">全部投入定期定額（不抵繳貸款，配息自行複利成長）</option>
+              <option value="surplus">先繳貸款月付金，剩餘投入定期定額</option>
+              <option value="compare">維持原用途，另外顯示定期定額對照試算</option>
+              <option value="custom">自訂金額投入定期定額（不使用配息，自行輸入每年投入金額）</option>
+            </select>
+          </div>
+          <div class="field"><label>定期定額投入年化報酬率(%)</label><input type="number" step="0.01" id="dcaRate" value="6" oninput="calcAll()"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>自訂每年投入金額(元，僅「自訂金額」模式生效)</label><input type="number" id="customDcaAmount" value="100000" oninput="calcAll()"></div>
+        </div>
+        <div class="amount-line">金額：<span id="cfAmountDisplay">NT$ 0</span></div>
+      </div>
+      <div class="alloc-card comp">
+        <h4>複利資產</h4>
+        <div class="field-row">
+          <div class="field"><label>配置比例(%)</label><input type="text" id="compRatioDisplay" value="50%" disabled></div>
+          <div class="field"><label>年化報酬率(%)</label><input type="number" step="0.01" id="compRate" value="6" oninput="calcAll()"></div>
+        </div>
+        <div class="amount-line">金額：<span id="compAmountDisplay">NT$ 0</span></div>
+      </div>
+    </div>
+    <p class="note">複利資產配置比例 = 100% − 現金流資產配置比例，自動計算。</p>
+    <p class="note">配息投入定期定額說明：「維持原用途」＝配息用來抵繳貸款月付金，缺口自己補；「全部投入定期定額」＝配息不再抵繳貸款，改為每年投入定期定額帳戶依報酬率複利成長；「先繳貸款剩餘投入」＝配息先抵繳貸款月付金，有剩餘才投入定期定額；「維持原用途＋對照」＝實際計算仍用原用途，另外多顯示一欄「若配息全額改投定期定額」的試算數字供對照；「自訂金額」＝配息仍維持原用途抵繳貸款，另外每年固定投入你自訂的金額到定期定額帳戶複利成長，與配息金額無關。</p>
+  </div>
+
+  <div class="section-title"><span class="tag">STEP 4</span>試算條件</div>
+  <div class="misc-row">
+    <div class="field"><label>身故保障總額(元)</label><input type="number" id="deathBenefit" value="5000000" oninput="calcAll()"></div>
+    <div class="field"><label>試算年數</label><input type="number" id="tableYears" value="20" oninput="calcAll()"></div>
+  </div>
+
+  <div class="section-title"><span class="tag">STEP 5</span>試算表</div>
+  <div class="table-scroll">
+    <table class="calc-table">
+      <thead><tr>
+        <th>年期</th><th>市值投資</th><th>身故保障</th><th>總負債</th><th>年支出</th><th>年現金流</th><th>年淨現金流</th><th>定期定額累積</th><th>淨資產</th>
+      </tr></thead>
+      <tbody id="table1Body"></tbody>
+    </table>
+  </div>
+  <p class="note">市值投資＝複利資產以年化報酬率複利成長之市值；年支出＝當年度所有貸款月付金合計*12；年現金流＝現金流資產年配息收入；年淨現金流＝年現金流－年支出（依「配息投入定期定額」設定而異，詳見上方說明，此欄僅供參考，不計入淨資產）；定期定額累積＝依所選模式將配息（或其剩餘、或自訂金額）逐年投入、以定期定額報酬率複利滾存之金額；淨資產＝市值投資＋配息資產本金＋定期定額累積－總負債（不含累積年淨現金流）。</p>
+
+  <div class="section-title"><span class="tag">STEP 6</span>規劃前 vs 規劃後：每月現金比較</div>
+  <div class="compare-wrap">
+    <div class="field" style="max-width:200px;">
+      <label>檢視第幾年的月付狀況</label>
+      <input type="number" id="compareYear1" value="1" min="1" oninput="calcAll()">
+    </div>
+    <div class="compare-grid">
+      <div class="compare-card">
+        <h4>貸款月付金—自己需負擔金額</h4>
+        <div class="compare-row"><span>規劃前（自己全額繳）</span><span id="cmp1_exp_before">NT$ 0</span></div>
+        <div class="compare-row"><span>規劃後（配息先繳，自己補差額）</span><span id="cmp1_exp_after">NT$ 0</span></div>
+        <div class="compare-row delta"><span>配息幫忙分攤</span><span id="cmp1_exp_delta">NT$ 0</span></div>
+      </div>
+      <div class="compare-card">
+        <h4>現金流資產配息 vs 貸款月付金</h4>
+        <div class="compare-row"><span>每月配息收入</span><span id="cmp1_cf_before">NT$ 0</span></div>
+        <div class="compare-row"><span>每月貸款月付金</span><span id="cmp1_cf_after">NT$ 0</span></div>
+        <div class="compare-row delta"><span>配息覆蓋後盈虧</span><span id="cmp1_cf_delta">NT$ 0</span></div>
+      </div>
+    </div>
+    <div class="verdict" id="verdictBox1">—</div>
+  </div>
+  <p class="note">規劃前：這些貸款的月付金完全由自己現金支付；規劃後：現金流資產的配息收入會先拿去支應貸款月付金，自己只需要補足配息不夠的差額。「配息覆蓋後盈虧」為正代表配息已完全覆蓋貸款、還有結餘；為負則代表配息尚不足以完全覆蓋，仍需自行補差額。</p>
+
+</section>
+
+<!-- ===================== PAGE 2 ===================== -->
+<section id="page2" class="page">
+
+  <div class="section-title"><span class="tag">沿用</span>已從初階版帶入的資料</div>
+  <div class="alloc-wrap" style="margin-bottom:16px;">
+    <p class="note" style="margin:0 0 12px;">四筆貸款目前總負債／年付本息，以及已投入市場之資金與收益率，皆直接沿用初階版 STEP1～STEP3 的設定，此頁只需補充「貸款以外」的資產即可（下列三項請至初階版調整，本頁會自動同步）。</p>
+    <div class="pool-line"><span class="label">投入市場總額</span><span class="value" id="p2_investPool">NT$ 0</span></div>
+    <div class="pool-line"><span class="label">身故保障總額</span><span class="value" id="p2_deathBenefit">NT$ 0</span></div>
+    <div class="pool-line"><span class="label">試算年數</span><span class="value" id="p2_tableYears">20 年</span></div>
+  </div>
+
+  <div class="section-title"><span class="tag">STEP 1</span>補充其他資產</div>
+  <div class="grid-loans">
+    <div class="card">
+      <h3 style="margin:0 0 12px;font-size:15px;">現有資金</h3>
+      <div class="field-row">
+        <div class="field"><label>現有資金(元)</label><input type="number" id="cash_p2" value="500000" oninput="calcAll()"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="margin:0 0 12px;font-size:15px;">市值投資（貸款以外）</h3>
+      <div class="field-row">
+        <div class="field"><label>投資金額(元)</label><input type="number" id="investAmt_p2" value="2000000" oninput="calcAll()"></div>
+        <div class="field"><label>預估年化報酬率(%)</label><input type="number" step="0.01" id="investRate_p2" value="6" oninput="calcAll()"></div>
+      </div>
+      <p class="note">此為既有的自有資金投資部位，會再加上初階版「投入市場資金配置」中的現金流資產與複利資產金額。</p>
+    </div>
+    <div class="card" style="grid-column:span 2;">
+      <h3 style="margin:0 0 12px;font-size:15px;">房地產</h3>
+      <div class="field-row" style="grid-template-columns:repeat(2,1fr);">
+        <div class="field"><label>總價(元)</label><input type="number" id="price_p2" value="15000000" oninput="calcAll()"></div>
+        <div class="field"><label>預估年化報酬率(%)</label><input type="number" step="0.01" id="apprRate_p2" value="2" oninput="calcAll()"></div>
+      </div>
+      <p class="note">貸款餘額不需再輸入，總負債將自動採用初階版四筆貸款（信用貸款／購屋貸款／理財型房貸／保單貸款）逐年攤還後的剩餘本金加總。</p>
+    </div>
+  </div>
+
+  <div class="section-title"><span class="tag">STEP 2</span>試算條件</div>
+  <div class="misc-row">
+    <div class="field"><label>其他年支出(元，不含貸款月付金，選填)</label><input type="number" id="expense_p2" value="0" oninput="calcAll()"></div>
+  </div>
+  <p class="note">身故保障總額與試算年數請於初階版 STEP3 設定，本頁自動沿用；年支出＝四筆貸款當年度月付金合計*12＋此處填寫之其他支出。</p>
+
+  <div class="section-title"><span class="tag">STEP 3</span>試算表</div>
+  <div class="table-scroll">
+    <table class="calc-table">
+      <thead><tr>
+        <th>年期</th><th>房產市值</th><th>現金</th><th>市值投資</th><th>身故保障</th><th>總負債</th><th>年支出</th><th>年現金流</th><th>年淨現金流</th><th>定期定額累積</th><th>淨資產</th>
+      </tr></thead>
+      <tbody id="table2Body"></tbody>
+    </table>
+  </div>
+  <p class="note">市值投資＝自有市值投資（複利成長）＋初階版複利資產（複利成長）＋初階版現金流資產（本金，持續配息）；總負債＝四筆貸款逐年剩餘本金加總；年現金流＝現金流資產年配息收入；年淨現金流＝年現金流－年支出（依「配息投入定期定額」設定而異）；定期定額累積＝依初階版所選配息投入模式逐年滾存之金額（本頁計算含其他年支出）；淨資產＝市值投資＋定期定額累積－總負債。</p>
+
+  <div class="section-title"><span class="tag">STEP 4</span>規劃前 vs 規劃後：每月現金比較</div>
+  <div class="compare-wrap">
+    <div class="field" style="max-width:200px;">
+      <label>檢視第幾年的月付狀況</label>
+      <input type="number" id="compareYear" value="1" min="1" oninput="calcAll()">
+    </div>
+    <div class="compare-grid">
+      <div class="compare-card">
+        <h4>貸款月付金＋其他支出—自己需負擔金額</h4>
+        <div class="compare-row"><span>規劃前（自己全額繳）</span><span id="cmp_exp_before">NT$ 0</span></div>
+        <div class="compare-row"><span>規劃後（配息先繳貸款，自己補差額）</span><span id="cmp_exp_after">NT$ 0</span></div>
+        <div class="compare-row delta"><span>配息幫忙分攤</span><span id="cmp_exp_delta">NT$ 0</span></div>
+      </div>
+      <div class="compare-card">
+        <h4>現金流資產配息 vs 貸款月付金</h4>
+        <div class="compare-row"><span>每月配息收入</span><span id="cmp_cf_before">NT$ 0</span></div>
+        <div class="compare-row"><span>每月貸款月付金</span><span id="cmp_cf_after">NT$ 0</span></div>
+        <div class="compare-row delta"><span>配息覆蓋後盈虧</span><span id="cmp_cf_delta">NT$ 0</span></div>
+      </div>
+    </div>
+    <div class="verdict" id="verdictBox">—</div>
+  </div>
+  <p class="note">規劃前：這些貸款的月付金加上其他年支出，完全由自己現金支付；規劃後：現金流資產的配息收入會先拿去支應貸款月付金，自己只需要補足配息不夠的差額，再加上其他年支出。「配息覆蓋後盈虧」為正代表配息已完全覆蓋貸款、還有結餘；為負則代表配息尚不足以完全覆蓋，仍需自行補差額。</p>
+
+</section>
+
+
+</div>
+
+<script>
+function showPage(n, btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page'+n).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function getNum(id){
+  const el = document.getElementById(id);
+  if(!el) return 0;
+  const v = parseFloat(el.value);
+  return isNaN(v) ? 0 : v;
+}
+function setText(id, txt){ const el=document.getElementById(id); if(el) el.textContent = txt; }
+function fmt(n){
+  n = Math.round(n||0);
+  return 'NT$ ' + n.toLocaleString('zh-Hant-TW');
+}
+function fmtCell(n){
+  n = Math.round(n||0);
+  const cls = n<0 ? ' class="neg"' : '';
+  return '<td'+cls+'>'+n.toLocaleString('zh-Hant-TW')+'</td>';
+}
+function fmtSigned(n){
+  n = Math.round(n||0);
+  return (n>0?'+':'') + 'NT$ ' + n.toLocaleString('zh-Hant-TW');
+}
+function clamp(v,min,max){ return Math.max(min,Math.min(max,v)); }
+
+// ---- amortization schedule (shared) ----
+function computeSchedule(principal, annualRatePct, termYears, graceYears){
+  const n = Math.round((termYears||0)*12);
+  const g = Math.min(Math.round((graceYears||0)*12), n);
+  if(n<=0 || principal<=0){
+    return {monthly:[], n:0, g:0, gracePMT:0, normalPMT:0};
+  }
+  const r = (annualRatePct||0)/100/12;
+  const remN = n-g;
+  let normalPMT = 0;
+  if(remN>0){
+    normalPMT = r===0 ? principal/remN : principal*r*Math.pow(1+r,remN)/(Math.pow(1+r,remN)-1);
+  }
+  const gracePMT = g>0 ? principal*r : normalPMT;
+  let balance = principal;
+  const monthly = [];
+  for(let m=1;m<=n;m++){
+    let payment, interest, principalPay;
+    if(m<=g){
+      interest = balance*r;
+      principalPay = 0;
+      payment = interest;
+    } else {
+      interest = balance*r;
+      payment = normalPMT;
+      principalPay = payment-interest;
+      if(principalPay>balance) principalPay = balance;
+    }
+    balance = Math.max(balance-principalPay, 0);
+    monthly.push({month:m, balance, payment});
+  }
+  return {monthly, n, g, gracePMT, normalPMT};
+}
+function yearlyBalance(sched, year){
+  if(sched.n<=0) return 0;
+  const monthIdx = year*12;
+  if(monthIdx>sched.n) return 0;
+  const idx = Math.min(monthIdx, sched.n)-1;
+  return sched.monthly[idx] ? sched.monthly[idx].balance : 0;
+}
+function yearlyPayment(sched, year){
+  if(sched.n<=0) return 0;
+  const start=(year-1)*12+1, end=year*12;
+  let sum=0;
+  for(let m=start;m<=end;m++){
+    if(m<=sched.n) sum += sched.monthly[m-1].payment;
+  }
+  return sum;
+}
+
+function toggleInvest(chk, id){
+  const row = document.getElementById('investRow_'+id);
+  const investedNow = chk.checked;               // 打開開關 = 投入市場
+  row.dataset.invest = investedNow.toString();
+  row.classList.toggle('active', investedNow);
+  row.querySelector('.switch-text').innerHTML = investedNow
+    ? '此筆貸款已<b>投入市場</b>'
+    : '此筆貸款<b>不</b>投入市場';
+  const card = row.closest('.loan-card');
+  if(card) card.classList.toggle('invested', investedNow);
+  calcAll();
+}
+function isInvest(id){
+  const row = document.getElementById('investRow_'+id);
+  return row && row.dataset.invest === 'true';
+}
+
+const LOAN_IDS = [
+  {id:'credit', grace:false},
+  {id:'mortgage', grace:true},
+  {id:'wm', grace:true},
+  {id:'policy', grace:true}
+];
+const P1 = { investPool:0, cfAmount:0, compAmount:0, cfRate:0, compRate:0, deathBenefit:0, tableYears:20, dividendMode:'off', dcaRate:0, dcaFundArr:[0], cumCFArr:[0], netCFArr:[0], cfIncomeArr:[0] };
+let P2_dcaFundArr = [0];
+
+function calcAll(){
+  calcPage1();
+  calcCompare1();
+  calcPage2();
+  calcCompare();
+}
+
+function updatePaymentDisplay(id, sched, grace){
+  const el = document.getElementById('payment_'+id);
+  if(sched.n<=0){ el.innerHTML='請輸入額度與年期'; return; }
+  if(grace>0){
+    el.innerHTML = '寬限期間(僅付息)：'+fmt(sched.gracePMT)+' /月<br>寬限期後(本息攤還)：'+fmt(sched.normalPMT)+' /月';
+  } else {
+    el.innerHTML = '月付金：'+fmt(sched.normalPMT);
+  }
+}
+
+let schedulesCache = {};
+
+function calcPage1(){
+  let investPool = 0;
+
+  const selfFundAmount = getNum('amount_selfFund');
+  if(isInvest('selfFund')) investPool += selfFundAmount;
+
+  LOAN_IDS.forEach(l=>{
+    const amount = getNum('amount_'+l.id);
+    const years = getNum('years_'+l.id);
+    const rate = getNum('rate_'+l.id);
+    const grace = l.grace ? getNum('grace_'+l.id) : 0;
+    const sched = computeSchedule(amount, rate, years, grace);
+    schedulesCache[l.id] = sched;
+    updatePaymentDisplay(l.id, sched, grace);
+    if(isInvest(l.id)) investPool += amount;
+  });
+
+  const cfRatio = clamp(getNum('cfRatio'), 0, 100);
+  document.getElementById('cfRatio').value = cfRatio;
+  const compRatio = 100-cfRatio;
+  setText('compRatioDisplay', compRatio+'%');
+  document.getElementById('compRatioDisplay').value = compRatio+'%';
+  document.getElementById('barCf').style.width = cfRatio+'%';
+  document.getElementById('barComp').style.width = compRatio+'%';
+
+  const cfAmount = investPool*cfRatio/100;
+  const compAmount = investPool*compRatio/100;
+  const cfRate = getNum('cfRate');
+  const compRate = getNum('compRate');
+
+  setText('investPoolDisplay', fmt(investPool));
+  setText('cfAmountDisplay', fmt(cfAmount));
+  setText('compAmountDisplay', fmt(compAmount));
+
+  const deathBenefit = getNum('deathBenefit');
+  const tableYears = Math.max(1, Math.round(getNum('tableYears') || 20));
+
+  const dividendModeEl = document.getElementById('dividendMode');
+  const dividendMode = dividendModeEl ? dividendModeEl.value : 'off';
+  const dcaRate = getNum('dcaRate');
+  const customDcaAmount = getNum('customDcaAmount');
+
+  let rows=[]; let cumCF=0; let dcaFund=0; let dcaFundCompare=0;
+  const dcaFundArr=[0]; const cumCFArr=[0]; const netCFArr=[0]; const cfIncomeArr=[0];
+  for(let y=1;y<=tableYears;y++){
+    let totalDebt=0, annualExpense=0;
+    LOAN_IDS.forEach(l=>{
+      const sched = schedulesCache[l.id];
+      totalDebt += yearlyBalance(sched, y);
+      annualExpense += yearlyPayment(sched, y);
+    });
+    const compValue = compAmount*Math.pow(1+compRate/100, y);
+    const cfIncome = cfAmount*cfRate/100;
+
+    let netCF, contribution;
+    if(dividendMode==='full'){
+      netCF = -annualExpense;
+      contribution = cfIncome;
+    } else if(dividendMode==='surplus'){
+      contribution = Math.max(cfIncome-annualExpense, 0);
+      netCF = Math.min(cfIncome-annualExpense, 0);
+    } else if(dividendMode==='custom'){
+      netCF = cfIncome-annualExpense;
+      contribution = customDcaAmount;
+    } else {
+      netCF = cfIncome-annualExpense;
+      contribution = 0;
+    }
+    dcaFund = dcaFund*(1+dcaRate/100)+contribution;
+    cumCF += netCF;
+
+    if(dividendMode==='compare'){
+      dcaFundCompare = dcaFundCompare*(1+dcaRate/100)+cfIncome;
+    }
+    const dcaDisplay = dividendMode==='compare' ? dcaFundCompare : dcaFund;
+
+    const netAssets = (compValue+cfAmount+dcaFund)-totalDebt;
+
+    dcaFundArr.push(dcaFund);
+    cumCFArr.push(cumCF);
+    netCFArr.push(netCF);
+    cfIncomeArr.push(cfIncome);
+
+    rows.push([y, compValue, deathBenefit, totalDebt, annualExpense, cfIncome, netCF, dcaDisplay, netAssets]);
+  }
+  const body = document.getElementById('table1Body');
+  body.innerHTML = rows.map(r=>{
+    return '<tr><td>'+r[0]+'</td>'+r.slice(1).map(fmtCell).join('')+'</tr>';
+  }).join('');
+
+  P1.investPool = investPool;
+  P1.cfAmount = cfAmount;
+  P1.compAmount = compAmount;
+  P1.cfRate = cfRate;
+  P1.compRate = compRate;
+  P1.deathBenefit = deathBenefit;
+  P1.tableYears = tableYears;
+  P1.dividendMode = dividendMode;
+  P1.dcaRate = dcaRate;
+  P1.customDcaAmount = customDcaAmount;
+  P1.dcaFundArr = dcaFundArr;
+  P1.cumCFArr = cumCFArr;
+  P1.netCFArr = netCFArr;
+  P1.cfIncomeArr = cfIncomeArr;
+}
+
+function calcCompare1(){
+  const maxYear = Math.max(1, Math.round(P1.tableYears||20));
+  const year = clamp(Math.round(getNum('compareYear1')||1), 1, maxYear);
+  document.getElementById('compareYear1').value = year;
+
+  let loanExpense = 0;
+  LOAN_IDS.forEach(l=>{
+    const sched = schedulesCache[l.id];
+    loanExpense += yearlyPayment(sched, year);
+  });
+  const cfIncome = P1.cfAmount*P1.cfRate/100;
+  const mode = P1.dividendMode || 'off';
+  const dcaAtYear = (P1.dcaFundArr && P1.dcaFundArr[year]!==undefined) ? P1.dcaFundArr[year] : 0;
+
+  const selfBefore = loanExpense;
+  const selfAfter = mode==='full' ? loanExpense : loanExpense-cfIncome;
+  const selfSaved = selfBefore-selfAfter;
+
+  setText('cmp1_exp_before', fmt(selfBefore/12)+' /月');
+  setText('cmp1_exp_after', fmt(selfAfter/12)+' /月');
+  setText('cmp1_exp_delta', fmtSigned(selfSaved/12)+' /月');
+
+  setText('cmp1_cf_before', fmt(cfIncome/12)+' /月');
+  setText('cmp1_cf_after', fmt(loanExpense/12)+' /月');
+  setText('cmp1_cf_delta', fmtSigned((cfIncome-loanExpense)/12)+' /月');
+
+  const verdict = document.getElementById('verdictBox1');
+  const monthlySelfAfter = selfAfter/12;
+  const monthlySelfBefore = selfBefore/12;
+  const monthlySaved = selfSaved/12;
+
+  let dcaNote = '';
+  if(mode==='full' || mode==='surplus' || mode==='custom'){
+    dcaNote = '（配息投入定期定額累積至第'+year+'年約為 '+fmt(dcaAtYear)+'）';
+  } else if(mode==='compare'){
+    dcaNote = '（若改為全額投入定期定額，累積至第'+year+'年約可成長為 '+fmt(dcaAtYear)+'）';
+  }
+
+  if(mode==='full'){
+    verdict.className='verdict warn';
+    verdict.innerHTML = '第'+year+'年：配息目前全數投入定期定額，貸款月付金仍需自己全額負擔 '+fmt(monthlySelfBefore)+'/月，配息不會用來抵繳貸款'+dcaNote+'。';
+  } else if(monthlySelfAfter<=0){
+    verdict.className='verdict good';
+    verdict.innerHTML = '第'+year+'年：貸款月付金已由現金流資產配息完全覆蓋，每月甚至還有結餘 '+fmt(Math.abs(monthlySelfAfter))+'，規劃後不用再自己拿錢繳貸款（規劃前需自己全額負擔 '+fmt(monthlySelfBefore)+'/月），生活比規劃前更輕鬆'+dcaNote+'。';
+  } else {
+    verdict.className='verdict warn';
+    verdict.innerHTML = '第'+year+'年：現金流資產配息每月可幫忙分攤 '+fmt(monthlySaved)+'，自己只需再補 '+fmt(monthlySelfAfter)+'（規劃前需自己全額負擔 '+fmt(monthlySelfBefore)+'/月），負擔比規劃前減輕'+dcaNote+'。';
+  }
+}
+
+function calcPage2(){
+  const cash = getNum('cash_p2');
+  const investAmt = getNum('investAmt_p2');
+  const investRate = getNum('investRate_p2');
+  const price = getNum('price_p2');
+  const apprRate = getNum('apprRate_p2');
+  const extraExpense = getNum('expense_p2');
+  const deathBenefit = P1.deathBenefit;
+  const tableYears = Math.max(1, Math.round(P1.tableYears || 20));
+
+  setText('p2_investPool', fmt(P1.investPool));
+  setText('p2_deathBenefit', fmt(P1.deathBenefit));
+  setText('p2_tableYears', tableYears+' 年');
+
+  const mode = P1.dividendMode || 'off';
+  const dcaRate = P1.dcaRate || 0;
+
+  let rows=[]; let cumCash=0; let dcaFund2=0;
+  const dcaFundArr2=[0];
+  for(let y=1;y<=tableYears;y++){
+    const propValue = price*Math.pow(1+apprRate/100,y);
+    const ownInvestValue = investAmt*Math.pow(1+investRate/100,y);
+    const compValue = P1.compAmount*Math.pow(1+P1.compRate/100,y);
+    const cfValue = P1.cfAmount;
+
+    let totalDebt=0, loanExpense=0;
+    LOAN_IDS.forEach(l=>{
+      const sched = schedulesCache[l.id];
+      totalDebt += yearlyBalance(sched, y);
+      loanExpense += yearlyPayment(sched, y);
+    });
+    const totalExpense = loanExpense+extraExpense;
+    const cfIncome = P1.cfAmount*P1.cfRate/100;
+
+    let netCF, contribution;
+    if(mode==='full'){
+      netCF = -totalExpense;
+      contribution = cfIncome;
+    } else if(mode==='surplus'){
+      contribution = Math.max(cfIncome-totalExpense, 0);
+      netCF = Math.min(cfIncome-totalExpense, 0);
+    } else if(mode==='custom'){
+      netCF = cfIncome-totalExpense;
+      contribution = P1.customDcaAmount || 0;
+    } else {
+      netCF = cfIncome-totalExpense;
+      contribution = 0;
+    }
+    dcaFund2 = dcaFund2*(1+dcaRate/100)+contribution;
+    dcaFundArr2.push(dcaFund2);
+
+    cumCash += netCF;
+    const cashNow = cash+cumCash;
+    const investValue = ownInvestValue+compValue+cfValue;
+    const netAssets = (investValue+dcaFund2)-totalDebt;
+    rows.push([y, propValue, cashNow, investValue, deathBenefit, totalDebt, totalExpense, cfIncome, netCF, dcaFund2, netAssets]);
+  }
+  const body = document.getElementById('table2Body');
+  body.innerHTML = rows.map(r=>{
+    return '<tr><td>'+r[0]+'</td>'+r.slice(1).map(fmtCell).join('')+'</tr>';
+  }).join('');
+
+  P2_dcaFundArr = dcaFundArr2;
+}
+
+function calcCompare(){
+  const maxYear = Math.max(1, Math.round(P1.tableYears||20));
+  const year = clamp(Math.round(getNum('compareYear')||1), 1, maxYear);
+  document.getElementById('compareYear').value = year;
+
+  let loanExpense = 0;
+  LOAN_IDS.forEach(l=>{
+    const sched = schedulesCache[l.id];
+    loanExpense += yearlyPayment(sched, year);
+  });
+  const extraExpense = getNum('expense_p2');
+  const cfIncome = P1.cfAmount*P1.cfRate/100;
+  const mode = P1.dividendMode || 'off';
+  const dcaAtYear = (P2_dcaFundArr && P2_dcaFundArr[year]!==undefined) ? P2_dcaFundArr[year] : 0;
+
+  const selfBefore = loanExpense+extraExpense;
+  const selfAfter = mode==='full' ? (loanExpense+extraExpense) : (loanExpense-cfIncome+extraExpense);
+  const selfSaved = selfBefore-selfAfter;
+
+  setText('cmp_exp_before', fmt(selfBefore/12)+' /月');
+  setText('cmp_exp_after', fmt(selfAfter/12)+' /月');
+  setText('cmp_exp_delta', fmtSigned(selfSaved/12)+' /月');
+
+  setText('cmp_cf_before', fmt(cfIncome/12)+' /月');
+  setText('cmp_cf_after', fmt(loanExpense/12)+' /月');
+  setText('cmp_cf_delta', fmtSigned((cfIncome-loanExpense)/12)+' /月');
+
+  const verdict = document.getElementById('verdictBox');
+  const monthlySelfAfter = selfAfter/12;
+  const monthlySelfBefore = selfBefore/12;
+  const monthlySaved = selfSaved/12;
+
+  let dcaNote = '';
+  if(mode==='full' || mode==='surplus' || mode==='custom'){
+    dcaNote = '（配息投入定期定額累積至第'+year+'年約為 '+fmt(dcaAtYear)+'）';
+  }
+
+  if(mode==='full'){
+    verdict.className='verdict warn';
+    verdict.innerHTML = '第'+year+'年：配息目前全數投入定期定額，貸款與其他支出仍需自己全額負擔 '+fmt(monthlySelfBefore)+'/月'+dcaNote+'。';
+  } else if(monthlySelfAfter<=0){
+    verdict.className='verdict good';
+    verdict.innerHTML = '第'+year+'年：貸款月付金已由現金流資產配息完全覆蓋，每月甚至還有結餘 '+fmt(Math.abs(monthlySelfAfter))+'，規劃後不用再自己拿錢繳貸款（規劃前需自己全額負擔 '+fmt(monthlySelfBefore)+'/月），生活比規劃前更輕鬆'+dcaNote+'。';
+  } else {
+    verdict.className='verdict warn';
+    verdict.innerHTML = '第'+year+'年：現金流資產配息每月可幫忙分攤 '+fmt(monthlySaved)+'，自己只需再補 '+fmt(monthlySelfAfter)+'（規劃前需自己全額負擔 '+fmt(monthlySelfBefore)+'/月），負擔比規劃前減輕'+dcaNote+'。';
+  }
+}
+
+calcAll();
+</script>
+</body>
+</html>
